@@ -1,0 +1,80 @@
+@import url(http://fonts.googleapis.com/css?family=Open+Sans);
+
+body {
+    background-color: #444;
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Open Sans', sans-serif;
+}
+
+#buttons {
+    position:relative;
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    background: #ccc;
+    text-align: center;
+}
+#buttons > div {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid black;
+    margin: 1em;
+    cursor: pointer;
+    min-width: 10em;
+    box-sizing: border-box;
+}
+#buttons > div > label {
+    padding: 0.25em;
+    font-size: 0.75em;
+    background-color: darkgray;
+}
+@media (hover: hover) {
+    button:hover{ 
+        background: #222;
+        color: white;
+    }
+}
+#buttons > div > div {
+    padding: 0.5em;
+}
+
+
+#output {
+    margin: 1em auto;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+#output > div {
+    display: flex;
+    flex-direction: column;
+}
+#output label {
+    color: white;
+    font-size: 1.5em;
+    text-align: center;
+    margin: 0.5em 0 0.25em 0;
+}
+canvas {
+    width: 460px;
+}
+
+
+@media screen and (max-width: 600px) {
+    #buttons > div {
+        margin: 0.5em;
+        width: calc(50% - 1em);
+        min-width: unset;
+    }
+    canvas {
+        width: 100%;
+    }
+}
+
+
+
+#todo h3 {
+    padding-left: 2em;
+}

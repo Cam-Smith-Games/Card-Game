@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
+        <meta charset="UTF-8">
+        <title>Game</title>
+
+        <link rel="stylesheet" type="text/css" href="style.css" />
+        <script defer="defer" src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+        <script defer="defer" src="script.js"></script>
+    </head>
+    <body>
+
+        <div id="buttons">
+            <div data-field="light">
+                <label>Light Color</label>
+                <div>red</div>
+            </div>
+            <div data-field="shade">
+                <label>Shade Color</label>
+                <div>night</div>
+            </div>
+            <div data-field="intensity">
+                <label>Shade Intensity</label>
+                <div>1</div>
+            </div>
+            <div data-field="lintensity"> 
+                <label>Light Intensity</label>
+                <div>1</div>
+            </div>
+            <div data-field="filter">
+                <label>Filter Effect</label>
+                <div>overlay</div>
+            </div>
+        </div>
+
+        <div id="output">
+            <div>
+                <label>Mask</label>
+                <canvas id="maskCanvas" width=460 height=320></canvas>
+            </div>
+            <div>
+                <label>Applied</label>
+                <canvas id="canvas" width=460 height=320></canvas>
+            </div>
+        </div>
+
+        <div id="todo">
+            <h3>TODO</h3>
+            <ul>
+                <li>Allow uploading mask and background image. Then set composition mode via dropdown to test drawing methods</li>
+                <li>Color pickers for shading etc</li>
+                <li>Range sliders for numbers</li>
+            </ul>
+        </div>
+
+    </body>
+</html>
