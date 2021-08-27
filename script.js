@@ -1,7 +1,7 @@
 import { AbstractLight, CircleLight} from "./modules/light.js";
 import { SimpleAnimation } from "./modules/animation.js";
 import * as ImageUtil from "./modules/image.js";
-import vector from "./modules/vector.js";
+import Vector from "./modules/vector.js";
 
 
 /** @type {HTMLCanvasElement} */
@@ -18,8 +18,8 @@ const mask = document.createElement("canvas").getContext("2d");
 
 
 const rtx = {
-    pos: new vector(0, 0),
-    size: new vector(500, 500),
+    pos: new Vector(0, 0),
+    size: new Vector(500, 500),
     color: "white",
     dir: 1,
     speed: 0.33,
@@ -59,7 +59,7 @@ ImageUtil.loadAll(
 
         const torch = new SimpleAnimation({
             sheet: images.torch,
-            frameSize: new vector(32, 64),
+            frameSize: new Vector(32, 64),
             numColumns: 9,
             numRows: 1,
             frameDelay: 75
@@ -97,7 +97,7 @@ ImageUtil.loadAll(
             ctx.drawImage(images.bg, 0, 0);
     
             torch.update(deltaTime);
-            torch.draw(ctx, new vector(1200, 350), new vector(80, 160), 0, 1)
+            torch.draw(ctx, new Vector(1200, 350), new Vector(80, 160), 0, 1)
 
             
             mask.clearRect(0, 0, mask.canvas.width, mask.canvas.height);

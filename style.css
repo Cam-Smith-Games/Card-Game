@@ -13,3 +13,22 @@ canvas {
     max-height: 100%;
     display: block;
 }
+
+
+
+/* #region abilities */
+#abiltiies:empty { display: none; }
+/* #endregion */
+
+
+/* #region buttons */
+#buttons {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+#buttons button {
+    position: absolute;
+    opacity: 0;
+}
+/* #endregion */
