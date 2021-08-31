@@ -1,5 +1,5 @@
 import { GameObject } from "./gameobject.js";
-import { clamp, mod } from "./math.js";
+import { clamp } from "./math.js";
 import Vector from "./vector.js";
 /** 
  * @typedef {import('./transform').default} Transform 
@@ -269,7 +269,7 @@ export class AnimationObject extends GameObject {
 }
 
 
-/** @enum {number} */
+/** @enum {number} *
 const directions = {
     UP: 0,
     LEFT: 1,
@@ -277,8 +277,8 @@ const directions = {
     RIGHT: 3
 }
 
-/** converts angle to direction 
- * @param {number} angle */
+/* converts angle to direction 
+ * @param {number} angle *
 function getDirection(angle) {
     const a = mod(angle, Math.PI * 2);
     const quad = Math.PI / 4;
@@ -287,7 +287,7 @@ function getDirection(angle) {
     if (a > quad * 3)  return directions.DOWN; 
     if (a > quad) return directions.RIGHT;
     return directions.UP;
-}
+}*/
 
 
 

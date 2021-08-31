@@ -10,8 +10,6 @@ export { Announcement as default };
  * @property {number} [r] 
  * @property {number} [g] 
  * @property {number} [b] 
- * @property {number} [x] 
- * @property {number} [y] 
  * @property {number} [maxWidth] 
  * @property {boolean} [outline]
  */
@@ -29,8 +27,6 @@ class Announcement extends GameObject {
         this.r = args.r ?? 255;
         this.g = args.g ?? 0;
         this.b = args.b ?? 0;
-        this.x = args.x ?? 0;
-        this.y = args.y ?? 0;
         this.maxWidth = args.maxWidth;
         this.outline = args.outline ?? true;
     }
@@ -48,17 +44,20 @@ class Announcement extends GameObject {
 
         ctx.save();
 
-        ctx.font = this.font;
-        ctx.fillStyle = `rgba(${this.r},${this.g},${this.b},${this.alpha})`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(this.text, this.x, this.y, this.maxWidth);
+        this.transform.render(ctx, () => {
+            ctx.font = this.font;
+            ctx.fillStyle = `rgba(${this.r},${this.g},${this.b},${this.alpha})`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(this.text, 0, 0, this.maxWidth);
+    
+            if (this.outline) {
+                ctx.strokeStyle = "white";
+                ctx.lineWidth = 0.25;
+                ctx.strokeText(this.text, 0, 0, this.maxWidth);
+            }
+        });
 
-        if (this.outline) {
-            ctx.strokeStyle = "white";
-            ctx.lineWidth = 0.25;
-            ctx.strokeText(this.text, this.x, this.y, this.maxWidth);
-        }
 
         ctx.restore();
     }

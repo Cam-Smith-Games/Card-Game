@@ -78,10 +78,13 @@ export default class Vector {
         return 0;
     }
 
-    /** @param {number} scalar */
+    /** @param {number|Vector} scalar */
     multiply(scalar) {
         if (typeof scalar === "number") {
             return new Vector(this.x * scalar, this.y * scalar);
+        }
+        if (scalar instanceof Vector) {
+            return new Vector(this.x * scalar.x, this.y * scalar.y);
         }
         return this;
     }

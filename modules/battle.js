@@ -47,7 +47,7 @@ export class Battle extends GameObject {
   
         this.teams.forEach((team, i) => {
             let y = 50;
-            team.forEach((char, j) => {
+            team.forEach((char, _) => {
 
                 // second team gets flipped to face left
                 char.flipped = i > 0;

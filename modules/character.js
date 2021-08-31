@@ -1,22 +1,22 @@
 import Announcement from "./announce.js";
 import { GameObject } from "./gameobject.js";
 import { getRandom, getRandomN } from "./random.js";
+import Transform from "./transform.js";
+import Vector from "./vector.js";
 
 /** 
- * @typedef {import('./vector.js').default} Vector 
- * @typedef {import("./ability").Ability} Ability
- * @typedef {import("./ability").Resistance} Resistance
+ * @typedef {import("./card").Card} Card
+ * @typedef {import("./card").Resistance} Resistance
  * @typedef {import('./battle').Battle} Battle
  * @typedef {import('./animation').AnimationTask} AnimationTask
  * @typedef {import('./animation').SpriteAnimation} SpriteAnimation
- * @typedef {import('./transform').default} Transform
  * @typedef {import('./buff').Buff} Buff
  *
  * @typedef {Object} CharacterArgs
  * @property {string} name
  * @property {number} hp
- * @property {Ability[]} abilities
- * @property {Object<string,AnimationTask>} animations
+ * @property {Card[]} deck
+ * @property {Object<string,function():AnimationTask>} animations
  * @property {string} [anim] name of animation to default to. (defaults to idle)
  * @property {Resistance} [defense] mapping damage types to resistances. each point reduces damage by 1
  * @property {number} [dodge] 0-1 chance to dodge. defaults to 0
@@ -46,7 +46,11 @@ export class Character extends GameObject {
         this.buffs = args.buffs ?? [];
 
 
-        this.abilities = args.abilities;
+        this.deck = args.deck;
+        this.draw_pile = this.deck;
+        /** @type {Card[]} */
+        this.discard_pile = [];
+
         /** @type {Resistance} */
         this.defense = args.defense ?? {};
 
@@ -61,13 +65,13 @@ export class Character extends GameObject {
         this.anim = null;
 
         if (args.anim in this.animations) {
-            this.anim = this.animations[args.anim];
+            this.anim = this.animations[args.anim]();
         } else if ("idle" in this.animations) {
-            this.anim = this.animations["idle"];
+            this.anim = this.animations["idle"]();
         } else {
             let animations = Object.values(this.animations);
             if (animations?.length) {
-                this.anim = animations[0];
+                this.anim = animations[0]();
             }
         }
 
@@ -149,12 +153,17 @@ export class Character extends GameObject {
     async doTurn(battle, friends, enemies) {
 
         // announce beginning of characters turn
+        // NOTE: not waiting on announcement
         console.group(`${this.name} turn`);
-        await Announcement.Promise({
+        Announcement.Promise({
             parent: battle,
             text: `${this.name}'s Turn`,
-            x: battle.ctx.canvas.width / 2,
-            y: battle.ctx.canvas.height / 2,
+            transform: new Transform({
+                pos: new Vector(
+                    battle.ctx.canvas.width / 2,
+                    battle.ctx.canvas.height / 2,
+                )
+            }),
             r: 255, g: 255, b: 255,
             font: "72px Arial",
             outline: false
@@ -192,7 +201,7 @@ export class NonPlayerCharacter extends Character {
         // basic NPC logic: 
         //  1. get random ability
         //  2. get random target(s) to cast ability on
-        const ability = getRandom(this.abilities);
+        const ability = getRandom(this.deck);
         if (ability) {
             // healing abilties target team mates instead of enemies
             const targets = getRandomN(ability.power < 0 ? friends : enemies, ability.maxTargets);
@@ -248,11 +257,11 @@ export class PlayerCharacter extends Character {
 
         return new Promise(resolve => {
 
-            for (let ability of this.abilities) {
-                console.log(ability);
+            for (let card of this.deck) {
+                console.log(card);
                 // TODO: need to calculate AP separate from "baseAP"
                 $hand.append(
-                    ability.getCard()
+                    card.getCard()
                     .wrap("<div class='card-container'></div>").parent()
                     .on("click", function() {
                         const $card = $(this).addClass("selected").on("click", function() {
@@ -261,7 +270,7 @@ export class PlayerCharacter extends Character {
                         });
 
                         $hand.addClass("collapsed");
-                        character.#generateButtons(battle, ability, characters).then(() => {
+                        character.#generateButtons(battle, card, characters).then(() => {
                             $hand.html("").removeClass("collapsed");
                             resolve();
                         });   
@@ -290,7 +299,7 @@ export class PlayerCharacter extends Character {
     /**
      * Creates invisible buttons for clicking targetable characters. This is run after selecting an ability
      * @param {Battle} battle
-     * @param {Ability} ability
+     * @param {Card} ability
      * @param {Character[]} characters 
      */
     #generateButtons(battle, ability, characters) {

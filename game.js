@@ -1,5 +1,5 @@
 import { PlayerCharacter, NonPlayerCharacter } from "./modules/character.js";
-import { ProjectileAbility, elements, SimpleAbility } from "./modules/ability.js";
+import { ProjectileAbility as ProjectileCard, elements, SimpleCard as SimpleCard, MeleeCard } from "./modules/card.js";
 import Vector from "./modules/vector.js";
 import { Battle } from "./modules/battle.js";
 import { load } from "./modules/load.js";
@@ -7,7 +7,7 @@ import { AnimationSheet } from "./modules/animation.js";
 import Transform from "./modules/transform.js";
 
 /** 
- * @typedef {import('./modules/ability').Ability} Ability
+ * @typedef {import('./modules/card').Card} Ability
  * @typedef {import('./modules/character').Character} Character
  */
 
@@ -126,10 +126,19 @@ load(paths, images => {
     // #endregion
 
 
-    // #region ABILITIES
-    /** list of every ability in the game */
+    // #region CARDS
+    /** list of every card in the game */
     const abilities = [
-        new ProjectileAbility({
+        new MeleeCard({
+            name: "Bonk",
+            description: "Get Bonked! HAHA!",
+            power: 10,
+            type: elements.PHYSICAL,
+            color: "#775533",
+            anim: () => sheets.fireball.animations.default.run(),
+            
+        }),
+        new ProjectileCard({
             name: "Fireball",
             description: "Ball shaped fire. TODO: chance to apply burn.",
             power: 10,
@@ -140,7 +149,7 @@ load(paths, images => {
             anim: () => sheets.fireball.animations.default.run(),
             icon: "https://www.wowisclassic.com/media/CACHE/images/wow/talents/03018560-b69a-4aba-914a-2505b55c7ea5/73723ea93d1f214d6df88cc859819627.jpg"
         }),
-        new SimpleAbility({
+        new SimpleCard({
             name: "Explosion",
             description: "Explosion",
             power: 10,
@@ -150,14 +159,14 @@ load(paths, images => {
             color: "#b11f13",
             anim: () => sheets.explosion.animations.default.run({ numLoops: 1 })
         }),
-        new ProjectileAbility({
+        new ProjectileCard({
             name: "Frostbolt",
             description: "Bolt of frost. TODO: change to apply slow debuff",
             power: 6,
             type: elements.ICE,
             color: "#4298c5"
         }),
-        new ProjectileAbility({
+        new ProjectileCard({
             name: "Lightning Strike",
             description: "Strike of lightning. High Damage, lower accuracy. TODO: chance to stun",
             power: 15,
@@ -167,7 +176,7 @@ load(paths, images => {
         }),
 
 
-        new ProjectileAbility({
+        new ProjectileCard({
             name: "Cock Punch",
             description: "Punch with cock.",
             power: 15,
@@ -178,7 +187,7 @@ load(paths, images => {
             color: "#fa2"
         }),
 
-        new ProjectileAbility({
+        new ProjectileCard({
             name: "Holy Light",
             description: "Holy Light.",
             power: -6,
@@ -189,8 +198,8 @@ load(paths, images => {
 
 
     /** @type {Object<string,Ability>} **/
-    const ability_map = {};
-    abilities.forEach(ability => ability_map[ability.name.replaceAll(" ", "_")] = ability);
+    const cards = {};
+    abilities.forEach(ability => cards[ability.name.replaceAll(" ", "_")] = ability);
     // #endregion
 
     // #region TEAMS
@@ -201,18 +210,20 @@ load(paths, images => {
                 transform: new Transform({
                     size: new Vector(150, 150)
                 }),
-                abilities: [
-                    ability_map.Fireball,
-                    ability_map.Explosion,
-                    ability_map.Frostbolt,
-                    ability_map.Lightning_Strike
+                deck: [
+                    cards.Bonk,
+                    cards.Fireball,
+                    cards.Explosion,
+                    cards.Frostbolt,
+                    cards.Lightning_Strike
                 ],
                 animations: {
-                    "idle": sheets.player.animations["idle"].run(),
-                    "Fireball": sheets.player.animations["attack"].run({ numLoops: 1 }),
-                    "Explosion": sheets.player.animations["attack"].run({ numLoops: 1 }),
-                    "Frostbolt": sheets.player.animations["attack"].run({ numLoops: 1 }),
-                    "Lightning_Strike": sheets.player.animations["attack"].run({ numLoops: 1 })
+                    "idle": () => sheets.player.animations["idle"].run(),
+                    "Bonk": () => sheets.player.animations["attack"].run({ numLoops: 1 }),
+                    "Fireball": () => sheets.player.animations["attack"].run({ numLoops: 1 }),
+                    "Explosion": () => sheets.player.animations["attack"].run({ numLoops: 1 }),
+                    "Frostbolt": () => sheets.player.animations["attack"].run({ numLoops: 1 }),
+                    "Lightning_Strike": () => sheets.player.animations["attack"].run({ numLoops: 1 })
                 }
             }),
             new NonPlayerCharacter({
@@ -221,12 +232,12 @@ load(paths, images => {
                 transform: new Transform({
                     size: new Vector(150, 150)
                 }),
-                abilities: [
-                    ability_map.Lightning_Strike
+                deck: [
+                    cards.Lightning_Strike
                 ],
                 animations: {
-                    "idle": sheets.player.animations["idle"].run(),
-                    "Lightning_Strike": sheets.player.animations["attack"].run({ numLoops: 1 })
+                    "idle": () => sheets.player.animations["idle"].run(),
+                    "Lightning_Strike": () => sheets.player.animations["attack"].run({ numLoops: 1 })
                 }
             }),
             new NonPlayerCharacter({
@@ -235,14 +246,14 @@ load(paths, images => {
                 transform: new Transform({
                     size: new Vector(150, 150)
                 }),
-                abilities: [
-                    ability_map.Fireball,
-                    ability_map.Frostbolt
+                deck: [
+                    cards.Fireball,
+                    cards.Frostbolt
                 ],
                 animations: {
-                    "idle": sheets.player.animations["idle"].run(),
-                    "Fireball": sheets.player.animations["attack"].run({ numLoops: 1 }),
-                    "Frostbolt": sheets.player.animations["attack"].run({ numLoops: 1 }),
+                    "idle": () => sheets.player.animations["idle"].run(),
+                    "Fireball": () => sheets.player.animations["attack"].run({ numLoops: 1 }),
+                    "Frostbolt":() => sheets.player.animations["attack"].run({ numLoops: 1 }),
                 }
             })
     ];
@@ -253,12 +264,12 @@ load(paths, images => {
                 transform: new Transform({
                     size: new Vector(150, 150),
                 }),
-                abilities: [
-                    ability_map.Fireball,
-                    ability_map.Lightning_Strike
+                deck: [
+                    cards.Fireball,
+                    cards.Lightning_Strike
                 ],
                 animations: {
-                    idle: sheets.player.animations["orc"].run()
+                    idle: () => sheets.player.animations["orc"].run()
                 }
             }),
             new NonPlayerCharacter({
@@ -267,11 +278,11 @@ load(paths, images => {
                 transform: new Transform({
                     size: new Vector(150, 150)
                 }),
-                abilities: [
-                    ability_map.Holy_Light
+                deck: [
+                    cards.Holy_Light
                 ],
                 animations: {
-                    idle: sheets.player.animations["gold_spirit"].run()
+                    idle: () =>  sheets.player.animations["gold_spirit"].run()
                 }
             }),
             new NonPlayerCharacter({
@@ -280,12 +291,12 @@ load(paths, images => {
                 transform: new Transform({
                     size: new Vector(150, 150)
                 }),
-                abilities: [
-                    ability_map.Frostbolt,
-                    ability_map.Lightning_Strike
+                deck: [
+                    cards.Frostbolt,
+                    cards.Lightning_Strike
                 ],
                 animations: {
-                    idle: sheets.lpc.animations["idle"].run() 
+                    idle: () => sheets.lpc.animations["idle"].run() 
 
                 }
             }),
