@@ -1,8 +1,13 @@
 import { Projectile } from "./projectile.js";
 import Vector from "./vector.js";
+import Announcement from "./announce.js";
+import Transform from "./transform.js";
+import { AnimationObject } from "./animation.js";
+
+/** @typedef {import('./animation').AnimationTask} AnimationTask */
 
 /** @enum {string} */
-const elements = {
+export const elements = {
     PHYSICAL:  "physical",
     FIRE: "fire",
     ICE: "ice",
@@ -12,6 +17,7 @@ const elements = {
     LIGHT: "light",
     DARK: "dark"
 };
+
 
 
 /** Maps each element to a resistance value (each point of resistance negates 1 damage). 
@@ -29,21 +35,7 @@ const elements = {
 
 
 
-/** 
- * @typedef {Object} AbilityArgs
- * @property {string} name
- * @property {string} description
- * @property {number} power arbitrary number used for calculating effectiveness of ability. Can be healing power, damage multiplier, etc. Depends on the spell
- * @property {number} [charges] number of charges remaining. defaults to max charges
- * @property {number} [maxCharges] max number of charges. defaults to 10
- * @property {number} [maxTargets] max number of targets. defaults to 1 
- * @property {number} [stability] 0-1 rating representing consistency of damage. stability=0 means damage will be very random, ranging from 0 - (2*power), stability=1 means damage will be very consistent, always equal to power. default = 1
- * @property {number} [critChance] 0-1 chance to crit. defaults to 0
- * @property {number} [critMultiplier] multiplier to apply for critical hits. defaults to 1.25.
- * @property {number} [accuracy] 0-1 chance to hit. defaults to 1 
- * @property {elements} [type] type of ability (used to determine which defensive attributes to apply to use when calculating damage). default = physical
- * @property {string} color color to apply when display spell name
-*/
+
 
 
 /** 
@@ -70,6 +62,24 @@ const elements = {
 export class Ability {
 
 
+
+    /** 
+     * @typedef {Object} AbilityArgs
+     * @property {string} name
+     * @property {string} description
+     * @property {number} power arbitrary number used for calculating effectiveness of ability. Can be healing power, damage multiplier, etc. Depends on the spell
+     * @property {number} [cost] number of ability points required to cast this spell
+     * @property {number} [maxTargets] max number of targets. defaults to 1 
+     * @property {number} [stability] 0-1 rating representing consistency of damage. stability=0 means damage will be very random, ranging from 0 - (2*power), stability=1 means damage will be very consistent, always equal to power. default = 1
+     * @property {number} [critChance] 0-1 chance to crit. defaults to 0
+     * @property {number} [critMultiplier] multiplier to apply for critical hits. defaults to 1.25.
+     * @property {number} [accuracy] 0-1 chance to hit. defaults to 1 
+     * @property {elements} [type] type of ability (used to determine which defensive attributes to apply to use when calculating damage). default = physical
+     * @property {string} color color to apply when display spell name
+     * @property {function():AnimationTask} [anim] returns animation to wait for upon ability execution
+     * @property {string} [icon] image to display on card
+    */
+
     /** 
      * @param {AbilityArgs} args
      * @param {CastCallback} cast function to run when executing this ability
@@ -79,8 +89,7 @@ export class Ability {
         this.name = args.name;
         this.description = args.description;
         this.power = args.power;
-        this.maxCharges = args.maxCharges ?? 10;
-        this.charges = Math.min(this.maxCharges, args.charges ?? this.maxCharges);
+        this.cost = args.cost ?? 1;
         this.accuracy = args.accuracy ?? 1;
         this.maxTargets = args.maxTargets ?? 1;
         this.critChance = args.critChance ?? 0;
@@ -90,6 +99,7 @@ export class Ability {
         this.type = args.type ?? "physical";
         this.color = args.color ?? "gray";
 
+        this.icon = args.icon ?? "";
         this.animate = animate ?? (() => Promise.resolve());
 
         /** 
@@ -99,92 +109,75 @@ export class Ability {
          * @returns {Promise<any>}
          */
         this.cast = function(battle, caster, targets) {
-            const damage = cast(caster, targets);
-            console.log("hey");
+            const damage = cast(caster, targets);         
             return this.animate(battle, caster, targets, damage);
         }
 
     }
-}
 
-// #region Concrete Abilities 
-export class BasicAbility extends Ability {
-    /** @param {AbilityArgs} args */
-    constructor(args) {
-        super(args, 
-            // CAST
-            (caster, targets) => targets.map(target => {
-                /** @type {any} */
-                const result = {};
-                const damage = this.getDamage(target, result);
-                if (result.miss) {
-                    console.log(`${caster.name}'s %c${this.name}%c missed ${target.name}!`, { this: this, target: target }, `color:${this.color};font-weight:bold`, '');
-                }
-                else {
-                    const styles = [];
-                    let log = "";
-                    
-                    styles.push(`color:${this.color};font-weight:bold;font-style:italic;text-transform:uppercase;font-size:1.25em;`),
-                    log += `${caster.name}'s %c${this.name} `;
-            
-                    styles.push(``),
-                    log += `%c${this.power > 0 ? "hits" : "heals"} ${target.name} for ${this.power > 0 ? damage : damage*-1}!`;
-                    
-                    if (result.critical) {
-                        styles.push("color: #ffaadd; font-style: italic");
-                        log += ` %c(CRITICAL ${this.critMultiplier}X DAMAGE) %c`;
-                        styles.push("");
-                    }
-        
-                    if (result.resist) {
-                        log += ` %c(${result.resist} resisted by ${this.type} reistance)`;
-                        styles.push("color: gray; font-style: italic;");
-                    }
-                    styles.push("");
-
-                    console.log(log, ...styles); //, result)
-                    target.hp -= damage;
-                }
-
-                return damage;
-            }),
-            // ANIMATE
-            /** 
-             * @param {import('./battle').Battle} battle
-             * @param {import("./character").Character} caster
-             * @param {import("./character").Character[]} targets
-             * @param {number[]} damage
-             */
-            (battle, caster, targets, damage) => {
-                // resolves once all animations complete 
-                // TODO: upon animation disposal:
-                //      render the damage number 
-                //      then fade it out
-                //      THEN resolve
-
-                console.log("fireball animate");
-                
-                return Promise.all(
-                    targets.map(target => new Promise((resolve, _) => {
-                        battle.projectiles.push(
-                            new Projectile({
-                                color: this.color, 
-                                pos: caster.pos,
-                                size: new Vector(10, 25),
-                                target: target.pos.add(target.size.divide(2)),
-                                velocity: new Vector(0, 500),
-                                dispose: () => { 
-                                    console.log("projectile disposed! resolving ability animation");
-                                    resolve();
-                                }
-                            })
-                        );
-                    }))
-                );
-            }
-            
+    getCard() {
+        // TODO: when cost is modified by a buff, it will need to be changed here
+        return $(
+            `<article class='card'>
+                <header>${this.name}</header>
+                <i>${this.cost}</i>
+                <img src='${this.icon}' />
+                <footer>${this.description}</footer>
+            </article>`
         );
     }
+}
+
+
+/** basic ablity that causes damage or heals (if damage is negative) */
+export class BasicAbility extends Ability {
+        /** 
+         * @param {AbilityArgs} args 
+         * @param {AnimateCallback} [animate] async function that resolves once animation is complete (called after casting)
+        */
+        constructor(args, animate) {
+            super(args, 
+                // CAST: calculate damage to apply to each target and log 
+                (caster, targets) => targets.map(target => {
+                    /** @type {any} */
+                    const result = {};
+                    const damage = this.getDamage(target, result);
+                    if (result.miss) {
+                        console.log(`${caster.name}'s %c${this.name}%c missed ${target.name}!`, { this: this, target: target }, `color:${this.color};font-weight:bold`, '');
+                    }
+                    else {
+                        const styles = [];
+                        let log = "";
+                        
+                        styles.push(`color:${this.color};font-weight:bold;font-style:italic;text-transform:uppercase;font-size:1.25em;`),
+                        log += `${caster.name}'s %c${this.name} `;
+                
+                        styles.push(``),
+                        log += `%c${this.power > 0 ? "hits" : "heals"} ${target.name} for ${this.power > 0 ? damage : damage*-1}!`;
+                        
+                        if (result.critical) {
+                            styles.push("color: #ffaadd; font-style: italic");
+                            log += ` %c(CRITICAL ${this.critMultiplier}X DAMAGE) %c`;
+                            styles.push("");
+                        }
+            
+                        if (result.resist) {
+                            log += ` %c(${result.resist} resisted by ${this.type} reistance)`;
+                            styles.push("color: gray; font-style: italic;");
+                        }
+                        styles.push("");
+    
+                        console.log(log, ...styles); //, result)
+                        target.hp -= damage;
+                    }
+    
+                    return damage;
+                }),
+                animate
+            );
+        }
+
+
 
     /**
      * calculates damage/healing to apply to target (random given crit chance/multiplier and stability)
@@ -222,69 +215,119 @@ export class BasicAbility extends Ability {
 
         return damage;  
     }
+
+}
+
+/** these abilities shoot a projectile and wait for impact */
+export class ProjectileAbility extends BasicAbility {
+    /** @param {AbilityArgs} args */
+    constructor(args) {
+        super(args, 
+            // ANIMATE: wait for caster cast animation -> wait for projectile -> wait for damage animation
+            /** 
+             * @param {import('./battle').Battle} battle
+             * @param {import("./character").Character} caster
+             * @param {import("./character").Character[]} targets
+             * @param {number[]} damage
+             */
+            async (battle, caster, targets, damage) => {
+                // if caster has an animation with this ability's name, run it and wait for it to finish
+                if (this.name in caster.animations) {
+                    const prevAnim = caster.anim;
+                    const anim = caster.animations[this.name];
+                    caster.anim = caster.animations[this.name];
+                    await anim.wait().then(() => caster.anim = prevAnim);
+                } 
+                else {
+                    console.log(`Caster ${caster.name} is missing animation for ability ${this.name}.`);
+                }
+  
+                return Promise.all(
+                    targets.map((target,i) => 
+                        Projectile.Promise({
+                            color: this.color, 
+                            pos: caster.transform.pos,
+                            size: new Vector(30, 75),
+                            target: target.transform.pos,
+                            // TODO: velocity needs to be configurable
+                            velocity: new Vector(0, 2500),
+                            anim: args.anim ? args.anim() : null,
+                            parent: battle
+                        })
+                        .then(projectile => {
+                            let dmg = damage[i];
+                            return Announcement.Promise({
+                                text: Math.abs(dmg).toString(),
+                                // heals are green, damage is red
+                                r: dmg > 0 ? 255 : 0,
+                                g: dmg < 0 ? 255 : 0,
+                                x: target.transform.pos.x,
+                                y: target.transform.pos.y,
+                                parent: battle
+                            });
+                        })
+                    )
+                );
+            }
+            
+        );
+    }
 }
 
 
 
-// TODO: AOE Abilities??
+/** either does nothing, or spawns an animation at target */
+export class SimpleAbility extends BasicAbility {
+    /** @param {AbilityArgs} args */
+    constructor(args) {
+        super(args, 
+            // ANIMATE: wait for caster cast animation -> wait for animation -> wait for damage animation
+            /** 
+             * @param {import('./battle').Battle} battle
+             * @param {import("./character").Character} caster
+             * @param {import("./character").Character[]} targets
+             * @param {number[]} damage
+             */
+            async (battle, caster, targets, damage) => {
 
-// #endregion
+                // if caster has an animation with this ability's name, run it and wait for it to finish
+                if (this.name in caster.animations) {
+                    const prevAnim = caster.anim;
+                    const anim = caster.animations[this.name];
+                    caster.anim = caster.animations[this.name];
+                    await anim.wait().then(() => caster.anim = prevAnim);
+                } 
+                else {
+                    console.log(`Caster ${caster.name} is missing animation for ability ${this.name}.`);
+                }
+  
+                return Promise.all(
+                    targets.map(async (target,i) => {
+                        await AnimationObject.Promise({
+                            transform: new Transform({
+                                pos: target.transform.pos,
+                                // TODO: size needs to be configurable
+                                size: new Vector(256, 256)
+                            }),
+                            anim: args.anim ? args.anim() : null,
+                            parent: battle
+                        });
+    
+                        let dmg = damage[i];
+                        await Announcement.Promise({
+                            text: Math.abs(dmg).toString(),
+                            // heals are green, damage is red
+                            r: dmg > 0 ? 255 : 0,
+                            g: dmg < 0 ? 255 : 0,
+                            x: target.transform.pos.x,
+                            y: target.transform.pos.y,
+                            parent: battle
+                        });
 
-
-/** list of every ability in the game */
-export const abilities = [
-    new BasicAbility({
-        name: "Fireball",
-        description: "Ball shaped fire. TODO: chance to apply burn.",
-        power: 10,
-        type: elements.FIRE,
-        critChance: 0.75,
-        critMultiplier: 1.5,
-        color: "#b11f13"
-    }),
-    new BasicAbility({
-        name: "Frostbolt",
-        description: "Bolt of frost. TODO: change to apply slow debuff",
-        power: 6,
-        type: elements.ICE,
-        color: "#4298c5"
-    }),
-    new BasicAbility({
-        name: "Lightning Strike",
-        description: "Strike of lightning. High Damage, lower accuracy. TODO: chance to stun",
-        power: 15,
-        accuracy: 75,
-        type: elements.LIGHTNING,
-        color: "#ff0"
-    }),
-
-
-    new BasicAbility({
-        name: "Cock Punch",
-        description: "Punch with cock.",
-        power: 15,
-        accuracy: 50,
-        critChance: 0.5,
-        critMultiplier: 5,
-        type: elements.PHYSICAL,
-        color: "#fa2"
-    }),
-
-    new BasicAbility({
-        name: "Holy Light",
-        description: "Holy Light.",
-        power: -6,
-        type: elements.LIGHT,
-        color: "ff5"
-    })
-];
-
-
-/**
- * Dictionary of abilities by name
- * @type {Object<string,Ability>} 
- **/
-export const ability_map = {};
-abilities.forEach(ability => ability_map[ability.name.replaceAll(" ", "_")] = ability);
-
-
+                    })
+                );
+            }
+            
+        );
+    }
+}

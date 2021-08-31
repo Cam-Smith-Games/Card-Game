@@ -1,23 +1,68 @@
 @import url(http://fonts.googleapis.com/css?family=Open+Sans);
-
+html,body {
+    margin: 0;
+    padding: 0;
+}
 body {
     background-color: #444;
     user-select: none;
     font-family: 'Open Sans', sans-serif;
 }
 
-canvas {
-    background: black;
-    min-width: 460px;
-    max-width: 100%;
-    max-height: 100%;
+
+
+.container {
+    overflow: hidden;
+    position: relative;
+    background: red;
     display: block;
+    margin: 0 auto;
+    /*   
+        FORCING 16:9 width:height ratio
+        9/16 = 0.5625
+        16/9 = 1.7778
+        22px = (2*10px padding) + (2*1px border) 
+        -----------------------------------------
+        9/16 * 22px = 12.375px 
+        16/9 * 22px = 39.111px 
+    */
+    width: 100vw;
+    height: 56.25vw;
+    max-width: 177.78vh;
+    max-height: 100vh;
+    -webkit-box-shadow: 0px 3px 11px 0px rgba(0,0,0,0.75);
+    -moz-box-shadow: 0px 3px 11px 0px rgba(0,0,0,0.75);
+    box-shadow: 0px 3px 11px 0px rgba(0,0,0,0.75);
+
+
+    display: flex;
+    flex-direction: column;
 }
 
+canvas {
+    background: black;
+    flex-grow: 1;
+    height:75%;
+}
+
+/* #region UI */
+#ui {
+    height: 400px;
+    background: #555;
+    height: 25%;
+    display: flex;
+}
 
 
 /* #region abilities */
 #abiltiies:empty { display: none; }
+#abilities {
+    display: grid;
+}
+#abilities button {
+
+}
+/* #endregion */
 /* #endregion */
 
 
@@ -29,6 +74,165 @@ canvas {
 }
 #buttons button {
     position: absolute;
-    opacity: 0;
+    background: transparent;
+    border: 1px solid #aaa5;
 }
+#buttons button:hover {
+    background: #aaa5;
+}
+/* #endregion */
+
+
+
+/* #region loading screen */
+#load {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: #444;
+    padding: 10%;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+}
+
+#load progress { 
+    width: 100%;
+    border-radius: 0;
+    position: relative;
+    /* loading screen takes a bit to appear to avoid it popping in for a split second  */
+    animation-name: fade-in;
+    animation-delay: 0.5s;
+    animation-fill-mode: forwards;
+    opacity: 0;
+    animation-duration: 1s;
+}
+@keyframes fade-in {
+    0% { opacity: 0 }
+    100% { opacity: 1 }
+}
+#load progress::-webkit-progress-bar {
+    border-radius: 1em;
+    background-color: #555;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25) inset;
+}
+#load progress::-webkit-progress-value {
+    border-radius: 1em;
+    background-color: #4fbd6c;
+    background: repeating-linear-gradient(
+        -45deg,
+        #9cdc6d,#9cdc6d 10px,
+        #80c949 10px, #80c949 20px
+      );
+}
+#load progress::before {
+    content: "Loading...";
+    color: white;
+    text-align: center;
+    bottom: 1em;
+    position: absolute;
+    font-size: 1.75em;
+    left: 0;
+    right: 0;
+    font-style: italic;
+    animation-name: pulse;
+    animation-duration: 2s;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+}
+@keyframes pulse {
+    25%,75% { opacity: 1; }
+    50% { opacity: 0; }
+}
+/* #endregion */
+
+
+
+/* #region cards */
+/* #region card */
+.card { 
+    background: #998978;
+    border: 2px solid rgb(51, 103, 119);
+    width: var(--card-width);
+    height: var(--card-height);
+    border-radius: 0.25em;
+    box-shadow: 3px 3px 7px rgba(0,0,0,0.3);
+    flex-shrink: 0;
+    position: relative;
+    box-sizing:border-box;
+    user-select: none;
+    cursor: pointer;
+}
+.card header {
+    text-align: center;
+    padding-left: 24px;
+}
+.card i {
+    background: rgb(51, 103, 119);
+    color: white;
+    position: absolute;
+    top: 0;
+    left: 0;
+    line-height: 0.5em;
+    padding: 0.75em;
+    border-bottom-right-radius: 1em;
+    font-style: normal;
+}
+.card img {
+    width: 100%;
+    -webkit-user-drag: none;
+}
+.card footer {
+    text-align: center;
+    padding: 0.5em;
+}
+/* #endregion */
+/* #region hand */
+#hand {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    --card-height: 13.75em;/*220px;*/
+    --card-width: 8.75em;/*140px;*/
+    width: 35em;
+    max-width: 50%;
+}
+
+/* collapse hand upon selection */
+#hand.collapsed { width: var(--card-width); }
+#hand.collapsed .card-container { padding: 0; }
+#hand.collapsed .card-container:not(.selected) { display: none; }
+
+
+
+#hand .card-container {
+    overflow: hidden;
+    position: relative;
+    width: var(--card-width);
+    height: var(--card-height);
+    padding: 0 1em;
+    transition: font-size 0.1s ease-in;
+}
+#hand .card-container:last-child {
+    flex: 0 0 auto;
+}
+#hand:not(.collapsed) .card-container:hover {
+    z-index: 99;
+    overflow: visible;
+    /*padding-bottom: 10px;*/
+    font-size: 1.25em;
+}
+#hand .card {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+/* #endregion */
 /* #endregion */

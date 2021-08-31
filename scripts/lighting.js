@@ -1,7 +1,8 @@
-import { AbstractLight, CircleLight} from "./modules/light.js";
-import { SimpleAnimation } from "./modules/animation.js";
-import * as ImageUtil from "./modules/image.js";
-import Vector from "./modules/vector.js";
+import { CircleLight} from "../modules/light.js";
+import * as ImageUtil from "../modules/image.js";
+import Vector from "../modules/vector.js";
+import { AnimationSheet } from "../modules/animation.js";
+import Transform from "../modules/transform.js";
 
 
 /** @type {HTMLCanvasElement} */
@@ -57,15 +58,24 @@ ImageUtil.loadAll(
     },
     images => {
 
-        const torch = new SimpleAnimation({
+
+        const torch_sheet = new AnimationSheet({
             sheet: images.torch,
             frameSize: new Vector(32, 64),
-            numColumns: 9,
-            numRows: 1,
-            frameDelay: 75
+            groups: {
+                main: { columns: 9 }
+            }
         });
 
-        
+        const torch = {
+            anim: torch_sheet.animations["main"].run(),
+            transform: new Transform({
+                pos: new Vector(1200, 350), 
+                size: new Vector(80, 160)
+            })
+        } 
+
+
         mask.canvas.width = canvas.width = images.bg.width;
         mask.canvas.height = canvas.height = images.bg.height;
         rtx.size.x = canvas.width / 2;
@@ -96,9 +106,11 @@ ImageUtil.loadAll(
             ctx.globalCompositeOperation = "source-over";
             ctx.drawImage(images.bg, 0, 0);
     
-            torch.update(deltaTime);
-            torch.draw(ctx, new Vector(1200, 350), new Vector(80, 160), 0, 1)
-
+            torch.anim.update(deltaTime);
+            torch.transform.render(ctx, () => {
+                torch.anim.render(ctx, torch.transform.size);
+            })
+       
             
             mask.clearRect(0, 0, mask.canvas.width, mask.canvas.height);
             lights.forEach(light => light.render(mask));

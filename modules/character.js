@@ -1,17 +1,32 @@
+import Announcement from "./announce.js";
+import { GameObject } from "./gameobject.js";
 import { getRandom, getRandomN } from "./random.js";
 
-
-/**
- * @typedef {Object} CharacterOptions
+/** 
+ * @typedef {import('./vector.js').default} Vector 
+ * @typedef {import("./ability").Ability} Ability
+ * @typedef {import("./ability").Resistance} Resistance
+ * @typedef {import('./battle').Battle} Battle
+ * @typedef {import('./animation').AnimationTask} AnimationTask
+ * @typedef {import('./animation').SpriteAnimation} SpriteAnimation
+ * @typedef {import('./transform').default} Transform
+ * @typedef {import('./buff').Buff} Buff
+ *
+ * @typedef {Object} CharacterArgs
  * @property {string} name
  * @property {number} hp
- * @property {import("./ability").Ability[]} abilities
- * @property {import("./ability").Resistance} [defense] mapping damage types to resistances. each point reduces damage by 1
+ * @property {Ability[]} abilities
+ * @property {Object<string,AnimationTask>} animations
+ * @property {string} [anim] name of animation to default to. (defaults to idle)
+ * @property {Resistance} [defense] mapping damage types to resistances. each point reduces damage by 1
  * @property {number} [dodge] 0-1 chance to dodge. defaults to 0
- * @property {import('./vector.js').default} [pos]
- * @property {import('./vector.js').default} [size]
+ * @property {Transform} [transform]
+ * @property {Buff[]} [buffs] list of buffs (including debuffs) to apply to this character 
+ * @property {number} [baseAP] base numbner of action points per turn. This can be modified by buffs/debuffs
+ * @property {boolean} [flipped] if true, character is flipped horizontally to face opposite direction
  */
-export class Character {
+
+export class Character extends GameObject {
 
     #maxHP = 0;
     #hp = 0;
@@ -19,21 +34,44 @@ export class Character {
     /** set to true when user clicks on this character */
     selected = false;
 
-    /** @param {CharacterOptions} args */
+    /** @param {CharacterArgs} args  */
     constructor(args) {
+        super({});
+
         this.name = args.name;
         this.#hp = args.hp;
         this.#maxHP = args.hp;
 
+        this.baseAP = args.baseAP ?? 5;
+        this.buffs = args.buffs ?? [];
+
+
         this.abilities = args.abilities;
-        /** @type {import("./ability").Resistance} */
+        /** @type {Resistance} */
         this.defense = args.defense ?? {};
 
         this.dodge = args.dodge ?? 0;
 
         // this get set later once battle starts (positions based on team positioning)
-        this.pos = args.pos ?? null;
-        this.size = args.size ?? null;
+        this.transform = args.transform ?? null;
+
+        // defaulting animation
+        this.animations = args.animations ?? {};
+        /** @type {AnimationTask} */
+        this.anim = null;
+
+        if (args.anim in this.animations) {
+            this.anim = this.animations[args.anim];
+        } else if ("idle" in this.animations) {
+            this.anim = this.animations["idle"];
+        } else {
+            let animations = Object.values(this.animations);
+            if (animations?.length) {
+                this.anim = animations[0];
+            }
+        }
+
+        this.flipped = args.flipped ?? false;
 
     }
 
@@ -51,50 +89,84 @@ export class Character {
 
     /** @param {number} deltaTime time since last frame */
     update(deltaTime) {
+        super.update(deltaTime);
+
         // update spritesheet animation
+        if (this.anim) {
+            this.anim.update(deltaTime);
+        }
+
+        // TODO: wait for death animation, if any
+        return this.hp < 0;
+    }
+
+
+
+    /** @param {CanvasRenderingContext2D} ctx */
+    render(ctx) {
+        super.render(ctx);
+
+        this.transform.render(ctx, () => {
+            if (this.anim) {
+                if (this.flipped) ctx.scale(-1, 1);
+                this.anim.render(ctx, this.transform.size);
+                if (this.flipped) ctx.scale(-1, 1);
+            }
+            else {
+                ctx.strokeStyle = this.selected ? "yellow" : "#aaa";
+                ctx.lineWidth = 2;
+                ctx.strokeRect(-(this.transform.size.x / 2) + 1, (-this.transform.size.y / 2) + 1, this.transform.size.x - 2, this.transform.size.y);    
+            }
+             
+            // NAME
+            //ctx.fillStyle = "#aaa";
+            //ctx.fillRect(-this.transform.size.x / 2, this.transform.size.y / 2, this.transform.size.x, 32);
+            ctx.fillStyle = "white";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "top";
+            ctx.font = "32px Arial";
+            ctx.fillText(this.name, 0, -this.transform.size.y / 2 - 12, this.transform.size.x);
+    
+    
+            // HEALTH BAR
+            ctx.fillStyle = "red";
+            ctx.fillRect(-this.transform.size.x / 2, this.transform.size.y / 2 + 8, this.transform.size.x, 18);
+            ctx.fillStyle = "green";
+            ctx.fillRect(-this.transform.size.x / 2, this.transform.size.y / 2 + 8, this.transform.size.x * (this.#hp / this.#maxHP), 18);
+    
+            //ctx.fillStyle = "red";
+            //ctx.fillRect(-2, -2, 4, 4);    
+
+        });
     }
 
 
     /** 
-     * @param {import('./battle').Battle} battle
+     * @param {Battle} battle
      * @param {Character[]} friends
      * @param {Character[]} enemies
      */
-    doTurn(battle, friends, enemies) {
-        throw "attempted to execute abstract doTurn method";
-    }
+    async doTurn(battle, friends, enemies) {
 
-    /**
-     * @param {CanvasRenderingContext2D} ctx 
-    */
-    render(ctx) {
-        // BASE
-        // TODO: get frame from spritesheet animation
-        ctx.fillStyle = "#aaa";
-        ctx.fillRect(this.pos.x, this.pos.y, this.size.x, this.size.y);
-
-
+        // announce beginning of characters turn
+        console.group(`${this.name} turn`);
+        await Announcement.Promise({
+            parent: battle,
+            text: `${this.name}'s Turn`,
+            x: battle.ctx.canvas.width / 2,
+            y: battle.ctx.canvas.height / 2,
+            r: 255, g: 255, b: 255,
+            font: "72px Arial",
+            outline: false
+        });
         
-        if (this.selected) {
-            ctx.strokeStyle = "yellow";
-            ctx.lineWidth = 2;
-            ctx.strokeRect(this.pos.x + 1, this.pos.y + 1, this.size.x - 2, this.size.y - 2);
+        // apply all buffs (they might trigger an animation to wait for)
+        for (let buff of this.buffs) {
+            await buff.apply(this);
         }
-
-        // NAME
-        ctx.fillStyle = "white";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(this.name, this.pos.x + this.size.x / 2, this.pos.y + this.size.y / 2, this.size.x);
-
- 
-        // HEALTH BAR
-        ctx.fillStyle = "red";
-        ctx.fillRect(this.pos.x, this.pos.y + this.size.y, this.size.x, 5);
-        ctx.fillStyle = "green";
-        ctx.fillRect(this.pos.x, this.pos.y + this.size.y, this.size.x * (this.#hp / this.#maxHP), 5);
-
     }
+    
+      
 }
 
 
@@ -102,20 +174,20 @@ export class Character {
 /** NPC is a Character that uses AI to decide what turn to take
  * @todo implement actual logic instead of picking a random ability and target
  */
-export class NPC extends Character {
-    /** @param {CharacterOptions} args */
+export class NonPlayerCharacter extends Character {
+    /** @param {CharacterArgs} args */
     constructor(args) {
         super(args)
     }
 
-    /** 
-     * @param {import('./battle').Battle} battle
+    /**
+     * @param {Battle} battle
      * @param {Character[]} friends
      * @param {Character[]} enemies
+     * @returns {Promise<any>}
      */
-    doTurn(battle, friends, enemies) {
-
-        console.group(`${this.name} turn (NPC)`);
+    async doTurn (battle, friends, enemies) {
+        super.doTurn(battle, friends, enemies);
 
         // basic NPC logic: 
         //  1. get random ability
@@ -131,27 +203,26 @@ export class NPC extends Character {
 
         
         console.groupEnd();
-        return Promise.resolve();
+        return Promise.resolve();     
 
     }
 }
 
-export class PC extends Character {
-    /** @param {CharacterOptions} args */
+/** Player Character */
+export class PlayerCharacter extends Character {
+    /** @param {CharacterArgs} args */
     constructor(args) {
         super(args)
     }
 
 
     /** 
-     * @param {import('./battle').Battle} battle
+     * @param {Battle} battle
      * @param {Character[]} friends
      * @param {Character[]} enemies
      */
-    doTurn(battle, friends, enemies) {
-
-        console.group(`${this.name} turn (Playable Character)`);
-
+    async doTurn(battle, friends, enemies) {
+        await super.doTurn(battle, friends, enemies);
         // render UI
         //      do a flex grid of abilities
         //      future: disable / gray-out buttons lacking charges or viable targets
@@ -161,23 +232,47 @@ export class PC extends Character {
 
         //  click skip button: ends turn
 
-        return this.#showAbilities(battle, friends, enemies).then(() => console.groupEnd());
+        return this.#showCards(battle, friends, enemies).then(() => console.groupEnd());
     }
 
 
     /** 
-     * @param {import('./battle').Battle} battle
+     * @param {Battle} battle
      * @param {Character[]} friends
      * @param {Character[]} enemies
      */
-    #showAbilities(battle, friends, enemies) {
+    #showCards(battle, friends, enemies) {
         const character = this;
         const characters = friends.concat(enemies);
-        const html = this.abilities.map(a => `<button data-name='${a.name}'>${a.name}</button>`).join("");
+        const $hand = $("#hand").html("");
 
-        return new Promise((resolve, reject) => {
+        return new Promise(resolve => {
 
-            $("#abilities").off().html(html).on("click", "button", function() {
+            for (let ability of this.abilities) {
+                console.log(ability);
+                // TODO: need to calculate AP separate from "baseAP"
+                $hand.append(
+                    ability.getCard()
+                    .wrap("<div class='card-container'></div>").parent()
+                    .on("click", function() {
+                        const $card = $(this).addClass("selected").on("click", function() {
+                            $hand.removeClass("collapsed");
+                            $card.removeClass("selected");
+                        });
+
+                        $hand.addClass("collapsed");
+                        character.#generateButtons(battle, ability, characters).then(() => {
+                            $hand.html("").removeClass("collapsed");
+                            resolve();
+                        });   
+                    })
+                );
+
+            }
+
+            // TODO: add end turn button that that also resolves
+
+            /*$("#abilities").off().html(html).on("click", "button", function() {
                 const name = $(this).data("name");
                 const ability = character.abilities.filter(a => a.name == name)[0];  
                 console.log("SELECTED: ", {
@@ -185,7 +280,7 @@ export class PC extends Character {
                     ability: ability
                 });                
                 character.#generateButtons(battle, ability, characters).then(() => resolve());   
-            });
+            });*/
     
         });
 
@@ -194,8 +289,8 @@ export class PC extends Character {
 
     /**
      * Creates invisible buttons for clicking targetable characters. This is run after selecting an ability
-     * @param {import('./battle').Battle} battle
-     * @param {import('./ability').Ability} ability
+     * @param {Battle} battle
+     * @param {Ability} ability
      * @param {Character[]} characters 
      */
     #generateButtons(battle, ability, characters) {
@@ -204,12 +299,19 @@ export class PC extends Character {
 
         // TODO: how to select multi-target abilities? or should AOE just do everyone?
 
-        return new Promise((resolve, reject) => {
+        return new Promise(resolve => {
+            const $window = $(window);
+
             characters.forEach(char => {
                 const $button =
-                    $(`<button style='left:${char.pos.x + battle.ctx.canvas.offsetLeft}px;top:${char.pos.y + battle.ctx.canvas.offsetTop}px;width:${char.size.x}px;height:${char.size.y}px'></button>`)
+                    $(`<button></button>`)
                     .on("click", function() {
-                        ability.cast(battle, me, [char]).then(() => resolve());
+                        $buttons.html("");
+
+                        ability.cast(battle, me, [char]).then(() => {
+                            $window.off("resize");
+                            resolve();
+                        });
                     })
                     .on("mouseenter", function() {
                         char.selected = true;
@@ -219,7 +321,24 @@ export class PC extends Character {
                     });
                 
                 $buttons.append($button);
+
+                function resize() {
+                    let scale = battle.ctx.canvas.offsetWidth / battle.ctx.canvas.width;
+                    $button.css({
+                        // @ts-ignore
+                        left: (((char.transform.pos.x - (char.transform.size.x/2)) * scale))  + "px",
+                        // @ts-ignore
+                        top: (((char.transform.pos.y - (char.transform.size.y/2)) * scale))  + "px",
+                        width: (char.transform.size.x * scale) + "px",
+                        height: (char.transform.size.y * scale) + "px"
+                    })
+                }
+                $window.on("resize", resize);
+                resize();
             });
+
+
+
 
         });
 

@@ -1,87 +1,90 @@
-import { Rectangle } from './shapes.js';
+import { GameObject } from './gameobject.js';
 import Vector from './vector.js';
+/** 
+ * @typedef {import('./character').Character} Character
+ */
 
-export class Team {
-    /**
-     * 
-     * @param {import('./character').Character[]} characters 
-     */
-    constructor(characters) {
-        this.characters = characters;
-    }
-}
-export class Battle {
+
+export class Battle extends GameObject {
 
     #previousTime = 0;
     #team_index = -1;
     #turn_index = 0;
 
-    /** @type {import('./projectile').Projectile[]} */
-    projectiles = [];
+    /** @type {GameObject[]} */
+    objects = [];
 
 
     /**
      * @param {CanvasRenderingContext2D} ctx
-     * @param {Team} team1 left team 
-     * @param {Team} team2 right team
+     * @param {Character[]} team1 left team 
+     * @param {Character[]} team2 right team
      */
     constructor(ctx, team1, team2) {
+        super({
+            children: [...team1, ...team2]
+        });
+
         this.ctx = ctx;
         this.teams = [team1, team2];    
     }
 
     start() {
+        this.placeCharacters();
 
-        this.teams.forEach((team, i) => {
-            team.characters.forEach((char, j) => {
+        // begin update loop (recursive)
+        window.requestAnimationFrame(time => this.loop(time));
 
-                                
-                // this should be set before battle.start
-                //  it can be used to position, because bigger characters will shift others over
-                char.size = new Vector(50, 50);
-
-                char.pos = new Vector(
-                    i == 0 ? 50 : this.ctx.canvas.width - 100, 
-                    50 + (j * 75)
-                );
-
-            })
-        });
-
-        window.requestAnimationFrame(time => this.render(time));
+        // begin first turn (recursive)
         this.turn();
     }
 
+
+    /** positions characters on battlefield */
+    placeCharacters() {
+        // TODO: justify characters from center 
+        // TODO: allow specifying rows/columns instead of simply stacking
+  
+        this.teams.forEach((team, i) => {
+            let y = 50;
+            team.forEach((char, j) => {
+
+                // second team gets flipped to face left
+                char.flipped = i > 0;
+
+                let x =  50 + char.transform.size.x / 2;
+
+                char.transform.pos = new Vector(
+                    (i == 0 ? x : this.ctx.canvas.width - x), 
+                    y + char.transform.size.y / 2
+                );
+
+                // 50 = 18+32 (name bar + health bar)
+                y += (char.transform.size.y + 50) + 50;
+
+            })
+        });
+    }
+
+
     /**
-     * 
-     * @param {number} time 
+     * main game loop triggers update/render functions every frame
+     * @param {number} time current time in milliseconds. used to calculate deltaTime
      */
-    render(time) {
-        const deltaTime = time - this.#previousTime;
+    loop(time) {
+        // dividing by 1000 to convert milliseconds to seconds 
+        //   this is so we can use "FPS" for animations instead of "FPMS"
+        const deltaTime = (time - this.#previousTime) / 1000;
         this.#previousTime = time;
 
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
 
-        this.teams.forEach((team, i) => {
-            team.characters.forEach((char, j) => {
-                char.update(deltaTime);
-                char.render(this.ctx);
-            })
-        });
+        this.update(deltaTime);
+        this.render(this.ctx);
 
-        for(let i = this.projectiles.length - 1; i>-1; i--) {
-            let proj = this.projectiles[i];
-            if (proj.update(deltaTime)) {
-                proj.render(this.ctx);
-            }
-            else {
-                this.projectiles.splice(i, 1);
-            }
-        }
-    
-        window.requestAnimationFrame(t => this.render(t));
+        window.requestAnimationFrame(t => this.loop(t));
+
     }
-
 
     async turn() {
         this.#turn_index++;
@@ -93,7 +96,7 @@ export class Battle {
         const friends = this.teams[this.#team_index];
         const enemies = this.teams[enemy_index];
 
-        const friends_alive = friends.characters.filter(char => char.hp > 0);
+        const friends_alive = friends.filter(char => char.hp > 0);
         if (!friends_alive.length) {
             console.log(`FIGHT COMPLETE: Team ${enemy_index+1} Wins!`);
             return;
@@ -101,7 +104,7 @@ export class Battle {
 
         for (let friend of friends_alive) {
             // need to re-evaluate enemy livelihood after each individual turn because they can die each time 
-            const enemies_alive = enemies.characters.filter(char => char.hp > 0);
+            const enemies_alive = enemies.filter(char => char.hp > 0);
             if (!enemies_alive.length) {
                 console.log(`FIGHT COMPLETE: Team ${this.#team_index+1} Wins!`);
                 return;

@@ -6,7 +6,6 @@ export { loadAll }
  * @param {function(Object<string,HTMLImageElement>):void} callback
  */
 function loadAll(map, callback) {
-    console.log("hi");
     
     const promises = [];
     /** @type {Object<string, HTMLImageElement>} */
