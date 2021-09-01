@@ -276,8 +276,10 @@ export class PlayerCharacter extends Character {
                         });   
                     })
                 );
-
             }
+  
+            this.fanHand();
+
 
             // TODO: add end turn button that that also resolves
 
@@ -296,6 +298,35 @@ export class PlayerCharacter extends Character {
         // TODO: skip turn button
     }
 
+    fanHand() {
+        const $hand = $("#hand");
+        const $cards = $hand.find(" > .card-container");
+ 
+
+        // TODO: calculate range based on # of cards
+        let cards = $cards.length;
+        let range = Math.pow(cards, 1.5) * 2;        
+        let increment = range / (cards - 1);
+
+
+        $cards.each(function(i) {
+            const $card = $(this);
+            let angle = (increment * i) - range/2;
+
+            // lerping origin across bottom edge
+            let height = $card.outerWidth();
+            let left = new Vector(0, height);
+            let right = new Vector($card.outerWidth(),  height);
+            let origin = Vector.lerp(right, left, i / (cards-1));
+
+            $card.css({
+                "transform": `rotate(${angle}deg)`,
+                "transform-origin": `${origin.x}px ${origin.y}px`
+            });
+        });
+
+        $hand.css("width", `calc(var(--card-width)*${cards-1}.5)`);
+    }
     /**
      * Creates invisible buttons for clicking targetable characters. This is run after selecting an ability
      * @param {Battle} battle

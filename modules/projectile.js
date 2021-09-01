@@ -31,7 +31,6 @@ export class Projectile extends GameObject {
             }),
             parent: this,
             radius: 10
-            
         });
     }
 

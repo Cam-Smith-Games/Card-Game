@@ -54,6 +54,24 @@ export default class Vector {
         return new Vector(Math.abs(this.x), Math.abs(this.y));
     }
 
+    /**
+     * @param {number} start numnber to start at
+     * @param {number} end number to end at
+     * @param {number} perc percentage (0-1) between start and end
+     */
+    static lerp_num = (start, end, perc) => (1-perc) * start + (perc * end); 
+
+    /**
+     * @param {Vector} start vector to start at
+     * @param {Vector} end vector to end at
+     * @param {number} perc percentage (0-1) between start and end 
+     */
+    static lerp = (start, end, perc) => new Vector(
+        Vector.lerp_num(start.x, end.x, perc),
+        Vector.lerp_num(start.y, end.y, perc)
+    );
+    
+
     /** @param {Vector} vec */
     add(vec) {
         if (vec instanceof Vector) {

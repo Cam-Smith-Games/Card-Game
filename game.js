@@ -131,48 +131,54 @@ load(paths, images => {
     const abilities = [
         new MeleeCard({
             name: "Bonk",
-            description: "Get Bonked! HAHA!",
+            description: "Deal 2 ⚔",
             power: 10,
             type: elements.PHYSICAL,
             color: "#775533",
             anim: () => sheets.fireball.animations.default.run(),
-            
+            icon: "img/spells/icons/bonk.jpg"
         }),
         new ProjectileCard({
             name: "Fireball",
-            description: "Ball shaped fire. TODO: chance to apply burn.",
+            description: "Deal 4 🔥<br/>(Chance to burn)",
+            cost: 2,
             power: 10,
             type: elements.FIRE,
             critChance: 0.75,
             critMultiplier: 1.5,
             color: "#b11f13",
             anim: () => sheets.fireball.animations.default.run(),
-            icon: "https://www.wowisclassic.com/media/CACHE/images/wow/talents/03018560-b69a-4aba-914a-2505b55c7ea5/73723ea93d1f214d6df88cc859819627.jpg"
+            icon: "img/spells/icons/fireball.jpg"
         }),
         new SimpleCard({
             name: "Explosion",
-            description: "Explosion",
+            description: "Deal 6 🔥",
             power: 10,
             type: elements.FIRE,
             critChance: 0.5,
             critMultiplier: 2,
             color: "#b11f13",
-            anim: () => sheets.explosion.animations.default.run({ numLoops: 1 })
+            anim: () => sheets.explosion.animations.default.run({ numLoops: 1 }),
+            icon: "img/spells/icons/explosion.jpg"
         }),
         new ProjectileCard({
             name: "Frostbolt",
-            description: "Bolt of frost. TODO: change to apply slow debuff",
+            description: "Deal 4 🧊<br/>(Chance to slow)",
+            cost: 2,
             power: 6,
             type: elements.ICE,
-            color: "#4298c5"
+            color: "#4298c5",
+            icon: "img/spells/icons/frostbolt.jpg"
         }),
         new ProjectileCard({
             name: "Lightning Strike",
-            description: "Strike of lightning. High Damage, lower accuracy. TODO: chance to stun",
+            description: "Deal 4 ⚡<br/>(Chance to chain)",
+            cost: 3,
             power: 15,
             accuracy: 75,
             type: elements.LIGHTNING,
-            color: "#ff0"
+            color: "#ff0",
+            icon: "img/spells/icons/lightning_strike.jpg"
         }),
 
 
@@ -258,48 +264,49 @@ load(paths, images => {
             })
     ];
     const team2 = [
-            new NonPlayerCharacter({
-                name: "Josh",
-                hp: 150,
-                transform: new Transform({
-                    size: new Vector(150, 150),
-                }),
-                deck: [
-                    cards.Fireball,
-                    cards.Lightning_Strike
-                ],
-                animations: {
-                    idle: () => sheets.player.animations["orc"].run()
-                }
+        
+        new NonPlayerCharacter({
+            name: "Josh",
+            hp: 150,
+            transform: new Transform({
+                size: new Vector(150, 150),
             }),
-            new NonPlayerCharacter({
-                name: "Jake",
-                hp: 150,
-                transform: new Transform({
-                    size: new Vector(150, 150)
-                }),
-                deck: [
-                    cards.Holy_Light
-                ],
-                animations: {
-                    idle: () =>  sheets.player.animations["gold_spirit"].run()
-                }
+            deck: [
+                cards.Fireball,
+                cards.Lightning_Strike
+            ],
+            animations: {
+                idle: () => sheets.player.animations["orc"].run()
+            }
+        }),
+        new NonPlayerCharacter({
+            name: "Jake",
+            hp: 150,
+            transform: new Transform({
+                size: new Vector(150, 150)
             }),
-            new NonPlayerCharacter({
-                name: "Austin",
-                hp: 150,
-                transform: new Transform({
-                    size: new Vector(150, 150)
-                }),
-                deck: [
-                    cards.Frostbolt,
-                    cards.Lightning_Strike
-                ],
-                animations: {
-                    idle: () => sheets.lpc.animations["idle"].run() 
-
-                }
+            deck: [
+                cards.Holy_Light
+            ],
+            animations: {
+                idle: () =>  sheets.player.animations["gold_spirit"].run()
+            }
+        }),
+        new NonPlayerCharacter({
+            name: "Josh",
+            hp: 150,
+            transform: new Transform({
+                size: new Vector(150, 150),
             }),
+            deck: [
+                cards.Fireball,
+                cards.Lightning_Strike
+            ],
+            animations: {
+                idle: () => sheets.player.animations["orc"].run()
+            }
+        })
+        
     ];
     // #endregion
 

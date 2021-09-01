@@ -154,7 +154,6 @@ canvas {
 /* #region card */
 .card { 
     background: #998978;
-    border: 2px solid rgb(51, 103, 119);
     width: var(--card-width);
     height: var(--card-height);
     border-radius: 0.25em;
@@ -164,45 +163,59 @@ canvas {
     box-sizing:border-box;
     user-select: none;
     cursor: pointer;
+
+    background-image: url(img/card_overlay.png);
+    background-size: cover;
 }
+
 .card header {
     text-align: center;
-    padding-left: 24px;
+    padding: 1em 2em 0.5em 2em;
+    color: white;
 }
 .card i {
-    background: rgb(51, 103, 119);
+    background: rgb(16 142 194);
     color: white;
     position: absolute;
-    top: 0;
-    left: 0;
+    top: 0.4em;
+    left: 0.45em;
     line-height: 0.5em;
-    padding: 0.75em;
+    padding: 0.4em;
     border-bottom-right-radius: 1em;
     font-style: normal;
+    border: 0.1em solid #ad812b;
+    border-left-color: #ad812b;
+    border-top-color: #eddebf;
+    border-right-color: #4d2b16;
+    border-bottom-color: #5c3315;
 }
 .card img {
     width: 100%;
     -webkit-user-drag: none;
+    padding: 0 0.85em;
+    box-sizing: border-box;
+    height: 7.15em;
+    object-fit: cover;
+    object-position: center;
 }
 .card footer {
     text-align: center;
     padding: 0.5em;
+    padding: 0.25em 0.75em 1.5em 0.75em;
+    height: 4.33em;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 /* #endregion */
 /* #region hand */
 #hand {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    margin: 0 auto;
     display: flex;
     justify-content: center;
     align-items: flex-end;
-    --card-height: 13.75em;/*220px;*/
-    --card-width: 8.75em;/*140px;*/
-    width: 35em;
-    max-width: 50%;
+    --card-height: 16.62em;/*220px;*/
+    --card-width: 12em;/*140px;*/
+    max-width: 80%;
 }
 
 /* collapse hand upon selection */
@@ -213,12 +226,12 @@ canvas {
 
 
 #hand .card-container {
-    overflow: hidden;
     position: relative;
     width: var(--card-width);
     height: var(--card-height);
     padding: 0 1em;
     transition: font-size 0.1s ease-in;
+    box-sizing: border-box;
 }
 #hand .card-container:last-child {
     flex: 0 0 auto;
@@ -236,3 +249,7 @@ canvas {
 }
 /* #endregion */
 /* #endregion */
+
+#discard, #draw {
+    flex-grow: 1;
+}
