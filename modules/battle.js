@@ -46,21 +46,36 @@ export class Battle extends GameObject {
         // TODO: allow specifying rows/columns instead of simply stacking
   
         this.teams.forEach((team, i) => {
+            let x = 50;
             let y = 50;
+            let maxCharWidth = 0;
             team.forEach((char, _) => {
+
+                if (char.transform.size.x > maxCharWidth) {
+                    maxCharWidth = char.transform.size.x;
+                }
 
                 // second team gets flipped to face left
                 char.flipped = i > 0;
 
-                let x =  50 + char.transform.size.x / 2;
+                let cx =  x + char.transform.size.x / 2;
+
+                console.log(x);
 
                 char.transform.pos = new Vector(
-                    (i == 0 ? x : this.ctx.canvas.width - x), 
+                    (i == 0 ? cx : this.ctx.canvas.width - cx), 
                     y + char.transform.size.y / 2
                 );
 
                 // 50 = 18+32 (name bar + health bar)
                 y += (char.transform.size.y + 50) + 50;
+                
+                if (y > this.ctx.canvas.height - 50) {
+                    console.log(maxCharWidth);
+                    x += 50 + maxCharWidth;
+                    y = 50;
+                    maxCharWidth = 0;
+                }
 
             })
         });

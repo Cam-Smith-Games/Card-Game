@@ -34,6 +34,14 @@ export class Character extends GameObject {
     /** set to true when user clicks on this character */
     selected = false;
 
+
+    
+    /** @type {Card[]} */
+    hand = [];
+
+    /** @type {Card[]} */
+    discardPile = [];
+
     /** @param {CharacterArgs} args  */
     constructor(args) {
         super({});
@@ -47,9 +55,8 @@ export class Character extends GameObject {
 
 
         this.deck = args.deck;
-        this.draw_pile = this.deck;
-        /** @type {Card[]} */
-        this.discard_pile = [];
+        this.drawPile = this.deck;
+
 
         /** @type {Resistance} */
         this.defense = args.defense ?? {};
@@ -232,82 +239,155 @@ export class PlayerCharacter extends Character {
      */
     async doTurn(battle, friends, enemies) {
         await super.doTurn(battle, friends, enemies);
-        // render UI
-        //      do a flex grid of abilities
-        //      future: disable / gray-out buttons lacking charges or viable targets
-        
-        //  click ability button: highlights targetable targets
-        //          click target: casts ability, ends turn
 
-        //  click skip button: ends turn
-
-        return this.#showCards(battle, friends, enemies).then(() => console.groupEnd());
-    }
-
-
-    /** 
-     * @param {Battle} battle
-     * @param {Character[]} friends
-     * @param {Character[]} enemies
-     */
-    #showCards(battle, friends, enemies) {
         const character = this;
         const characters = friends.concat(enemies);
-        const $hand = $("#hand").html("");
+        const $hand = $("#hand").html(""); // .addClass("no-anim")
+
+        
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
         return new Promise(resolve => {
 
-            for (let card of this.deck) {
-                console.log(card);
-                // TODO: need to calculate AP separate from "baseAP"
-                $hand.append(
-                    card.getCard()
-                    .wrap("<div class='card-container'></div>").parent()
-                    .on("click", function() {
-                        const $card = $(this).addClass("selected").on("click", function() {
-                            $hand.removeClass("collapsed");
-                            $card.removeClass("selected");
-                        });
+            this.draw();
 
-                        $hand.addClass("collapsed");
-                        character.#generateButtons(battle, card, characters).then(() => {
-                            $hand.html("").removeClass("collapsed");
-                            resolve();
-                        });   
-                    })
-                );
-            }
+            $hand.addClass("drawing");
+
+            const animTime = 100;
+
+
+            console.log(this.hand);
+
+            // draw card 1 by 1, delay between each loop to wait for animation to finish
+            this.hand.forEach((card, i) => {
+                setTimeout(() => {
+
+                    // TODO: need to calculate AP separate from "baseAP"
+                    $hand.append(
+                        card.getCard()
+                        .wrap("<div class='card-container'></div>").parent()
+                        .on("click", function()  {
+
+                            if ($hand.hasClass("collapsed")) {
+                                $hand.removeClass("collapsed")
+                                    .find(".selected").removeClass("selected");
+
+                                $("#buttons").html("");
+                            }
+                            else {
+                                const $card = $(this).addClass("selected");
+                                $hand.addClass("collapsed");
+
+                                // todo: don't resolve until:
+                                //      no energy
+                                //      OR empty hand
+                                //      OR "end turn" is clicked
+                                character.renderTargetBoxes(battle, card, characters, () => {
+                                    character.discard($card);
+                                    $hand.removeClass("collapsed");
+                                })
+                                .then(() => {
+
+                                    // TODO: OR energy == 0
+                                    if (!character.hand.length) {
+                                        resolve();
+                                    }
+                                });   
+                            }
+
+                        })
+
+                    );
+
+                }, animTime * i);
+
+            })
+
+
+
+            // wait for all animations to finish, then fan
+            setTimeout(() => {
+                this.fanHand();
+                $hand.removeClass("drawing");
+                //$hand.removeClass("no-anim");
+            }, animTime * this.hand.length);
+
   
-            this.fanHand();
-
 
             // TODO: add end turn button that that also resolves
 
-            /*$("#abilities").off().html(html).on("click", "button", function() {
-                const name = $(this).data("name");
-                const ability = character.abilities.filter(a => a.name == name)[0];  
-                console.log("SELECTED: ", {
-                    name: name,
-                    ability: ability
-                });                
-                character.#generateButtons(battle, ability, characters).then(() => resolve());   
-            });*/
     
-        });
-
-        // TODO: skip turn button
+        })
+        .then(() => console.groupEnd());
     }
+
+
+
+    /**
+     * draws specified number of cards
+     * @param {number} num number of cards to draw 
+     */
+    draw(num = 5) {
+        
+        // TODO: number of cards based on card draw attribute
+
+        // put any existing cards back in deck        
+        for (let card of this.hand) {
+            this.drawPile.push(card);
+        };
+
+        /** @type {Card[]} */
+        this.hand = [];
+
+        let nn = Math.max(this.drawPile.length, num);
+
+        for(let i = 0; i <  nn; i++) {
+            let card = getRandom(this.drawPile);
+            if (card) {
+                this.hand.push(card);
+                this.drawPile.splice(this.drawPile.indexOf(card), 1);
+            }
+        }
+
+        $("#draw").attr("data-count", this.hand.length);
+    }
+
+    /** @param {JQuery<HTMLElement>} $card */
+    discard($card) {
+
+        const $hand = $("#hand").addClass("no-anim");
+
+ 
+        $card.addClass("discarding");
+        /** @type {Card} */
+        const card = $card.find(".card").data("card");
+
+        if (card) {            
+            // add card to discard pile and increment discard count
+            this.hand.splice(this.hand.indexOf(card), 1);
+            this.discardPile.push(card);
+            $("#discard").attr("data-count", this.discardPile.length);
+
+            // discard animation takes 1 second
+            setTimeout(() => {
+                $card.remove();
+                $hand.removeClass("no-anim");
+                this.fanHand();
+            }, 1000);
+        }
+
+
+    }
+
 
     fanHand() {
         const $hand = $("#hand");
         const $cards = $hand.find(" > .card-container");
  
-
         // TODO: calculate range based on # of cards
         let cards = $cards.length;
         let range = Math.pow(cards, 1.5) * 2;        
         let increment = range / (cards - 1);
-
 
         $cards.each(function(i) {
             const $card = $(this);
@@ -319,21 +399,28 @@ export class PlayerCharacter extends Character {
             let right = new Vector($card.outerWidth(),  height);
             let origin = Vector.lerp(right, left, i / (cards-1));
 
+            let rad = angle * Math.PI / 180;
+
             $card.css({
                 "transform": `rotate(${angle}deg)`,
-                "transform-origin": `${origin.x}px ${origin.y}px`
+                "transform-origin": `${origin.x}px ${origin.y}px`,
+                "bottom": `${(Math.cos(angle) * 20) - 20}px`,
+                "left": `${Math.sin(rad) * 100}px`
             });
         });
 
         $hand.css("width", `calc(var(--card-width)*${cards-1}.5)`);
     }
+
+
     /**
-     * Creates invisible buttons for clicking targetable characters. This is run after selecting an ability
+     * Creates buttons for clicking targetable characters. This is run after selecting an ability
      * @param {Battle} battle
-     * @param {Card} ability
+     * @param {Card} card
      * @param {Character[]} characters 
+     * @param {function():void} callback function to call immediately upon click (doesnt wait for aniamtion)
      */
-    #generateButtons(battle, ability, characters) {
+    renderTargetBoxes(battle, card, characters, callback) {
         const me = this;
         const $buttons = $("#buttons").html("");
 
@@ -346,18 +433,11 @@ export class PlayerCharacter extends Character {
                 const $button =
                     $(`<button></button>`)
                     .on("click", function() {
-                        $buttons.html("");
-
-                        ability.cast(battle, me, [char]).then(() => {
-                            $window.off("resize");
-                            resolve();
-                        });
-                    })
-                    .on("mouseenter", function() {
-                        char.selected = true;
-                    })
-                    .on("mouseleave", function() {
-                        char.selected = false;
+                        $buttons.html("");   
+                        $window.off("resize");
+  
+                        callback();
+                        card.cast(battle, me, [char]).then(() => resolve());
                     });
                 
                 $buttons.append($button);
@@ -376,9 +456,6 @@ export class PlayerCharacter extends Character {
                 $window.on("resize", resize);
                 resize();
             });
-
-
-
 
         });
 

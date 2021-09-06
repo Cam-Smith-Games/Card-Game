@@ -125,7 +125,7 @@ export class Card {
                 <img src='${this.icon}' />
                 <footer>${this.description}</footer>
             </article>`
-        );
+        ).data("card", this);
     }
 }
 

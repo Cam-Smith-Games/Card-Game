@@ -6,6 +6,9 @@ import { load } from "./modules/load.js";
 import { AnimationSheet } from "./modules/animation.js";
 import Transform from "./modules/transform.js";
 
+
+
+
 /** 
  * @typedef {import('./modules/card').Card} Ability
  * @typedef {import('./modules/character').Character} Character
@@ -231,36 +234,6 @@ load(paths, images => {
                     "Frostbolt": () => sheets.player.animations["attack"].run({ numLoops: 1 }),
                     "Lightning_Strike": () => sheets.player.animations["attack"].run({ numLoops: 1 })
                 }
-            }),
-            new NonPlayerCharacter({
-                name: "Graem",
-                hp: 100,
-                transform: new Transform({
-                    size: new Vector(150, 150)
-                }),
-                deck: [
-                    cards.Lightning_Strike
-                ],
-                animations: {
-                    "idle": () => sheets.player.animations["idle"].run(),
-                    "Lightning_Strike": () => sheets.player.animations["attack"].run({ numLoops: 1 })
-                }
-            }),
-            new NonPlayerCharacter({
-                name: "Adrian",
-                hp: 150,
-                transform: new Transform({
-                    size: new Vector(150, 150)
-                }),
-                deck: [
-                    cards.Fireball,
-                    cards.Frostbolt
-                ],
-                animations: {
-                    "idle": () => sheets.player.animations["idle"].run(),
-                    "Fireball": () => sheets.player.animations["attack"].run({ numLoops: 1 }),
-                    "Frostbolt":() => sheets.player.animations["attack"].run({ numLoops: 1 }),
-                }
             })
     ];
     const team2 = [
@@ -293,7 +266,7 @@ load(paths, images => {
             }
         }),
         new NonPlayerCharacter({
-            name: "Josh",
+            name: "Austin",
             hp: 150,
             transform: new Transform({
                 size: new Vector(150, 150),
@@ -304,6 +277,36 @@ load(paths, images => {
             ],
             animations: {
                 idle: () => sheets.player.animations["orc"].run()
+            }
+        }),
+        new NonPlayerCharacter({
+            name: "Graem",
+            hp: 100,
+            transform: new Transform({
+                size: new Vector(150, 150)
+            }),
+            deck: [
+                cards.Lightning_Strike
+            ],
+            animations: {
+                "idle": () => sheets.player.animations["idle"].run(),
+                "Lightning_Strike": () => sheets.player.animations["attack"].run({ numLoops: 1 })
+            }
+        }),
+        new NonPlayerCharacter({
+            name: "Adrian",
+            hp: 150,
+            transform: new Transform({
+                size: new Vector(150, 150)
+            }),
+            deck: [
+                cards.Fireball,
+                cards.Frostbolt
+            ],
+            animations: {
+                "idle": () => sheets.player.animations["idle"].run(),
+                "Fireball": () => sheets.player.animations["attack"].run({ numLoops: 1 }),
+                "Frostbolt":() => sheets.player.animations["attack"].run({ numLoops: 1 }),
             }
         })
         
