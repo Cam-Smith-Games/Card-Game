@@ -11,8 +11,8 @@ import { RTXGame } from "./modules/states.js";
 // #region loading
 const resource_paths = {
     field_bg: "img/backgrounds/field.jpg",
-    player: "/img/mini_fantasy_sprites.png",
-    lpc: "img/player/body/body_male.png",
+    player: "img/mini_fantasy_sprites.png",
+    lpc: "img/body_male.png",
     fireball: "img/spells/fireball.png",
     explosion: "img/spells/explosion.png"
 };
@@ -214,57 +214,20 @@ function getContent(images) {
             super(args);
         }
     }
-    // #endregion
-    // #region TEAMS
-    const teams = {
-        /** first easy-mode battle */
-        josh: [
-            new Troglodyte({
-                name: "Josh",
-                pos: new Vector(1160, 450)
-            })
-        ]
-        /*new Troglodyte({
-            name: "Adrian",
-            transform: new Transform({
-                size: new Vector(150, 150),
-                pos: new Vector(1160, 640)
-            })
-        }),
-
-        new Mage({
-            name: "Graem",
-            transform: new Transform({
-                size: new Vector(150, 150),
-                pos: new Vector(1360, 460)
-
-            })
-        }),
-
-        
-        new Mage({
-            name: "Austin",
-            transform: new Transform({
-                size: new Vector(150, 150),
-                pos: new Vector(1360, 650)
-            })
-        }),
-
-        new NonPlayerCharacter({
-            name: "Jake",
-            hp: 150,
-            transform: new Transform({
-                size: new Vector(150, 150),
-                pos: new Vector(1560, 540)
-            }),
-            deck: [
+    class Healer extends NonPlayerCharacter {
+        constructor(args) {
+            super(args);
+            args.hp = 15;
+            args.size = new Vector(32, 32);
+            args.scale = new Vector(5, 5);
+            args.deck = [
                 cards.Holy_Light
-            ],
-            animations: {
-                idle: () =>  sheets.player.animations["gold_spirit"].run()
-            }
-        })*/
-    };
+            ];
+            args.animations = {
+                idle: () => sheets.player.animations["gold_spirit"].run()
+            };
+        }
+    }
     // #endregion
     const content = {
         cards: cards,
@@ -294,7 +257,8 @@ function getContent(images) {
         ],
         monsters: {
             Troglodyte: Troglodyte,
-            Mage: Mage
+            Mage: Mage,
+            Healer: Healer
         }
     };
     return content;

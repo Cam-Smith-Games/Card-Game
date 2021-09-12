@@ -233,65 +233,28 @@ function getContent(images : Record<string,HTMLImageElement>) {
             super(args);
         }
     }
-    // #endregion
 
-    
+    class Healer extends NonPlayerCharacter {
+        constructor(args:CharacterArgs) {
+            super(args);
 
-    // #region TEAMS
-
-    const teams = {
-
-
-        /** first easy-mode battle */
-        josh: [       
-            new Troglodyte({
-                name: "Josh",
-                pos: new Vector(1160, 450)
-            })
-        ]
-        /*new Troglodyte({
-            name: "Adrian",
-            transform: new Transform({
-                size: new Vector(150, 150),
-                pos: new Vector(1160, 640)
-            })
-        }),
-
-        new Mage({
-            name: "Graem",
-            transform: new Transform({
-                size: new Vector(150, 150),
-                pos: new Vector(1360, 460)
-
-            })
-        }),
-
-        
-        new Mage({
-            name: "Austin",
-            transform: new Transform({
-                size: new Vector(150, 150),
-                pos: new Vector(1360, 650)
-            })
-        }),
-
-        new NonPlayerCharacter({
-            name: "Jake",
-            hp: 150,
-            transform: new Transform({
-                size: new Vector(150, 150),
-                pos: new Vector(1560, 540)
-            }),
-            deck: [
+            args.hp = 15;
+            args.size = new Vector(32, 32);
+            args.scale = new Vector(5, 5);
+      
+            args.deck = [
                 cards.Holy_Light
-            ],
-            animations: {
+            ];
+            args.animations = {
                 idle: () =>  sheets.player.animations["gold_spirit"].run()
-            }
-        })*/
-        
-    };
+            };
+          
+        }
+    }
+
     // #endregion
+
+
 
 
     const content:Content = {
@@ -322,7 +285,8 @@ function getContent(images : Record<string,HTMLImageElement>) {
         ],
         monsters: {
             Troglodyte: Troglodyte,
-            Mage: Mage
+            Mage: Mage,
+            Healer:Healer
         }
     };
     return content;
