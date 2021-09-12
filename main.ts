@@ -9,15 +9,14 @@ import { ProjectileAbility as ProjectileCard, elements, SimpleCard as SimpleCard
 import { Vector } from "./modules/engine/util/vector.js";
 import { load } from "./modules/engine/load.js";
 import { AnimationSheet } from "./modules/engine/animation.js";
-import { OvalLight } from "./modules/engine/objects/light.js";
 import { Content, RTXGame } from "./modules/states.js";
 
 
 // #region loading
 const resource_paths : Record<string,string> = {
     field_bg: "img/backgrounds/field.jpg",
-    player: "/img/mini_fantasy_sprites.png",
-    lpc: "img/player/body/body_male.png",
+    player: "img/mini_fantasy_sprites.png",
+    lpc: "img/body_male.png",
     fireball: "img/spells/fireball.png",
     explosion: "img/spells/explosion.png"
 };
