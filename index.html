@@ -5,32 +5,36 @@
         <meta charset="UTF-8">
         <title>Game</title>
 
-        <link rel="stylesheet" type="text/css" href="style.css" />
-        <!--<script defer="defer" type="module" src="script.js"></script>-->
+        <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
+        <link rel="stylesheet" type="text/css" href="/styles/map.css" />
+        <link rel="stylesheet" type="text/css" href="/styles/battle.css" />
 
         <script defer="defer" src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-        <script defer="defer" type="module" src="game.js"></script>
+        <script defer="defer" type="module" src="/out/main.js"></script>
 
     </head>
     <body>
 
-        <div class="container">
+        <div class="battle">
             <canvas id="canvas" width=1920 height=810></canvas>
 
             <div id="buttons"></div>
 
             <div id="ui">
                 <div>
-                    <div id="discard" class="deck" data-count="5">Discard</div>
+                    <div id="discard" class="deck" data-count="0">Discard</div>
+
+                    <div class="flex-column">
+                        <div id="energy"></div>
+                        <button id="btnEndTurn">END TURN</button>
+                    </div>
                 </div>
                 <div id="hand"></div>
                 <div style="justify-content:end">
-                    <div id="draw" class="deck" data-count="10">Draw</div>
+                    <div id="draw" class="deck" data-count="0">Draw</div>
                 </div>
             </div>
 
         </div>
-
-
     </body>
 </html>

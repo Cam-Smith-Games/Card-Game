@@ -1,0 +1,120 @@
+.map {
+
+    --map-color: #8b8a7d;
+    --border-color: #16212b;
+    --hover-accent: yellow;
+
+    position: relative;
+    background: var(--map-color);
+    display: inline-block;
+    padding: 32px;
+}
+
+/* #region SVG */
+.map > svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.map svg line {
+    stroke: var(--border-color);
+    /*stroke-dasharray: 8px 8px;*/
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-dasharray: 2 12;
+}
+/* #endregion */
+
+
+
+/* #region nav */
+.map nav {
+    display: flex;
+    flex-direction: column;
+    grid-gap: 4em;
+}
+
+.map nav .row {
+    display: flex;
+    align-items: center;
+    width: 500px;
+    height: 56px; /* have to hard-code height on rows to prevent stretching */
+}
+.map nav .row > div {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+}
+
+
+
+/*
+
+    todo: instead of doing ".node > button"
+          to  "button > span"
+
+          this will expose button:hover state to the outermost layer
+          which allows hovering to now control everything (specifically margin-top to offset position when zooming on hover)
+*/
+
+.map button {
+    background: var(--map-color);
+  
+    color: var(--border-color);
+    z-index: 1;
+    
+    border: 4px solid var(--border-color);;    
+    box-sizing: border-box;
+
+    border-radius: 100%;
+    overflow: hidden;
+
+    padding: 0;
+
+    font-size: 1.75em;   
+    width: 2em;
+    height: 2em;
+
+    transition: font-size 0.05s ease-in;
+
+}
+
+.map button i {   
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0.75;
+}
+
+.map button:enabled {
+    cursor: pointer;
+}
+.map button:enabled:hover { 
+    opacity: 1;
+    font-size: 2.25em;
+    -webkit-box-shadow: 0px 0px 15px 0px var(--border-color);
+    background: var(--hover-accent);
+    border-color: var(--hover-accent);;
+    box-shadow: 0px 0px 15px 0px var(--hover-accent);;
+ }
+ .map button:enabled:hover i {
+     color: black;
+ }
+
+
+.map button.complete { background: var(--border-color); }
+
+
+ /* #region icon colors */
+ .map .fa-skull { color: white; }
+ .map .fa-ghost { color: blue; }
+ .map .fa-crown { color: yellow; }
+ .map .fa-gift { color: #00640a; }
+ .map .fa-shopping-cart { color: rgb(25, 82, 130); }
+ .map button:disabled i { color: #56565685; }
+ /* #endregion */
+
+/* #endregion */
