@@ -285,8 +285,8 @@ function getContent(images : Record<string,HTMLImageElement>) {
         ],
         monsters: {
             Troglodyte: Troglodyte,
-            Mage: Mage,
-            Healer:Healer
+            Mage: Mage
+            //Healer:Healer
         }
     };
     return content;

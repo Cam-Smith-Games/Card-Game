@@ -257,8 +257,8 @@ function getContent(images) {
         ],
         monsters: {
             Troglodyte: Troglodyte,
-            Mage: Mage,
-            Healer: Healer
+            Mage: Mage
+            //Healer:Healer
         }
     };
     return content;

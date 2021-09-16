@@ -26,7 +26,7 @@ document.onmousemove = function handleMouseMove(event) {
 // #endregion
 const paths = {
     field_bg: "img/backgrounds/field.jpg",
-    player: "/img/mini_fantasy_sprites.png",
+    player: "img/mini_fantasy_sprites.png",
     lpc: "img/player/body/body_male.png",
     fireball: "img/spells/fireball.png",
     explosion: "img/spells/explosion.png"
